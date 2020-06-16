@@ -1,4 +1,4 @@
-# Stdout Capture
+# Standard Output Capture (outcap)
 
 Simple library to catch stdout/stderr in Go. Cloned from https://github.com/PumpkinSeed/cage
 
@@ -11,18 +11,18 @@ import (
     "fmt"
     "os"
 
-    "github.com/savantes1/StdoutCapture"
+    "github.com/savantes1/outcap"
 )
 
 func main() {
-    c := cage.Start()
+    oc := outcap.Start()
     
     fmt.Println("test")
     fmt.Println("test2")
     fmt.Fprintln(os.Stderr, "stderr error")
     
-    cage.Stop(c)
-    fmt.Println(c.Data)
+    cage.Stop(oc)
+    fmt.Println(oc.Data)
     // [test, test2, stderr error]
 }
 ```
