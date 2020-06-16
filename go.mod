@@ -1,3 +1,3 @@
-module github.com/PumpkinSeed/cage
+module github.com/savantes1/StdoutCapture
 
 go 1.13

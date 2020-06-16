@@ -1,4 +1,4 @@
-package cage
+package StdoutCapture
 
 import (
 	"fmt"

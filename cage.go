@@ -1,4 +1,4 @@
-package cage
+package StdoutCapture
 
 import (
 	"bytes"
@@ -14,8 +14,8 @@ type container struct {
 	backupStderr *os.File
 	writerStderr *os.File
 
-	data         string
-	channel      chan string
+	data    string
+	channel chan string
 
 	Data []string
 }

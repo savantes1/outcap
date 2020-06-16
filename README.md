@@ -1,6 +1,6 @@
-# Cage
+# Stdout Capture
 
-Simple library to catch stdout/stderr in Go.
+Simple library to catch stdout/stderr in Go. Cloned from https://github.com/PumpkinSeed/cage
 
 #### Usage
 
@@ -11,7 +11,7 @@ import (
     "fmt"
     "os"
 
-    "github.com/PumpkinSeed/cage"
+    "github.com/savantes1/StdoutCapture"
 )
 
 func main() {
