@@ -24,8 +24,9 @@ func main() {
         fmt.Fprintln(os.Stderr, "stderr error")
         
         oc.Stop()
-        fmt.Println(oc.Data)
-        // [test, test2, stderr error]
+        fmt.Println(oc.OutData) // [test, test2]
+        fmt.Println(oc.ErrorData) // [stderr error]
+
     } else {
 
         fmt.Fprintln(os.Stderr, err)

@@ -19,18 +19,25 @@ func TestStart(t *testing.T) {
 
 	c.Stop()
 
-	fmt.Println(c.Data)
+	fmt.Println(c.OutData)
+	fmt.Println(c.ErrorData)
 
-	if len(c.Data) != 3 {
-		t.Fatal("Data length should be 3")
+	if len(c.OutData) != 2 {
+		t.Fatal("OutData length should be 2")
 	}
-	if c.Data[0] != "test" {
-		t.Errorf("First line should be 'test', instead of %s", c.Data[0])
+
+	if len(c.ErrorData) != 1 {
+		t.Fatal("ErrorData length should be 1")
 	}
-	if c.Data[1] != "test2" {
-		t.Errorf("Second line should be 'test2', instead of %s", c.Data[1])
+
+	if c.OutData[0] != "test" {
+		t.Errorf("First line should be 'test', instead of %s", c.OutData[0])
 	}
-	if c.Data[2] != "stderr error" {
-		t.Errorf("Third line should be 'stderr error', instead of %s", c.Data[2])
+	if c.OutData[1] != "test2" {
+		t.Errorf("Second line should be 'test2', instead of %s", c.OutData[1])
+	}
+
+	if c.ErrorData[0] != "stderr error" {
+		t.Errorf("Error output should be 'stderr error', instead of %s", c.ErrorData[0])
 	}
 }

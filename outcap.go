@@ -24,10 +24,13 @@ type container struct {
 	backupStderr *os.File
 	writerStderr *os.File
 
-	data    string
-	channel chan string
+	outData      string
+	errorData    string
+	outChannel   chan string
+	errorChannel chan string
 
-	Data []string
+	OutData   []string
+	ErrorData []string
 }
 
 func NewContainer(delims ...rune) (*container, error) {
@@ -53,12 +56,13 @@ func NewContainer(delims ...rune) (*container, error) {
 		backupStderr: os.Stderr,
 		writerStderr: wStderr,
 
-		channel: make(chan string),
+		outChannel:   make(chan string),
+		errorChannel: make(chan string),
 	}
 	os.Stdout = c.writerStdout
 	os.Stderr = c.writerStderr
 
-	go func(out chan string, readerStdout *os.File, readerStderr *os.File) {
+	go func(outChan chan string, errorChan chan string, readerStdout *os.File, readerStderr *os.File) {
 		var bufStdout bytes.Buffer
 
 		// try to copy buffer from stdout to out channel
@@ -68,7 +72,7 @@ func NewContainer(delims ...rune) (*container, error) {
 		}
 
 		if bufStdout.Len() > 0 {
-			out <- bufStdout.String()
+			outChan <- bufStdout.String()
 		}
 
 		var bufStderr bytes.Buffer
@@ -80,15 +84,17 @@ func NewContainer(delims ...rune) (*container, error) {
 		}
 
 		if bufStderr.Len() > 0 {
-			out <- bufStderr.String()
+			errorChan <- bufStderr.String()
 		}
-	}(c.channel, rStdout, rStderr)
+	}(c.outChannel, c.errorChannel, rStdout, rStderr)
 
 	go func(c *container) {
 		for {
 			select {
-			case out := <-c.channel:
-				c.data += out
+			case out := <-c.outChannel:
+				c.outData += out
+			case err := <-c.errorChannel:
+				c.errorData += err
 			}
 		}
 	}(c)
@@ -114,8 +120,8 @@ func (c *container) Stop() {
 	os.Stdout = c.backupStdout
 	os.Stderr = c.backupStderr
 
-	// Separate captured output by delimeters
-	c.Data = strings.FieldsFunc(c.data,
+	// Separate captured stdout by delimeters
+	c.OutData = strings.FieldsFunc(c.outData,
 		func(r rune) bool {
 
 			for _, elem := range c.delimiters {
@@ -134,5 +140,11 @@ func (c *container) Stop() {
 	// 		c.Data = append(c.Data, elem)
 	// 	}
 	// }
+
+	c.ErrorData = strings.Split(c.errorData, "\n")
+
+	if c.ErrorData[len(c.ErrorData)-1] == "" {
+		c.ErrorData = c.ErrorData[:len(c.ErrorData)-1]
+	}
 
 }
