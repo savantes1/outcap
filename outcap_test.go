@@ -6,8 +6,27 @@ import (
 	"testing"
 )
 
-func TestStart(t *testing.T) {
-	c, err := NewContainer('\n')
+func TestInput(t *testing.T) {
+
+	c, err := NewContainer("42\n", '\n')
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var testInt int
+	fmt.Println("Type an int")
+	fmt.Scanln(&testInt)
+
+	fmt.Println("You Entered:", testInt)
+
+	c.Stop()
+
+	fmt.Println(c.OutData)
+
+}
+
+func TestOutput(t *testing.T) {
+	c, err := NewContainer("", '\n')
 
 	if err != nil {
 		t.Fatal(err)

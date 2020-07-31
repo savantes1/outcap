@@ -23,6 +23,8 @@ type container struct {
 	writerStdout *os.File
 	backupStderr *os.File
 	writerStderr *os.File
+	backupStdin  *os.File
+	readerStdin  *os.File
 
 	outData      string
 	errorData    string
@@ -33,16 +35,19 @@ type container struct {
 	ErrorData []string
 }
 
-func NewContainer(delims ...rune) (*container, error) {
+func NewContainer(stdinString string, delims ...rune) (*container, error) {
 
 	rStdout, wStdout, err := os.Pipe()
-
 	if err != nil {
 		return nil, err
 	}
 
 	rStderr, wStderr, err := os.Pipe()
+	if err != nil {
+		return nil, err
+	}
 
+	rStdin, wStdin, err := os.Pipe()
 	if err != nil {
 		return nil, err
 	}
@@ -56,9 +61,22 @@ func NewContainer(delims ...rune) (*container, error) {
 		backupStderr: os.Stderr,
 		writerStderr: wStderr,
 
+		backupStdin: os.Stdin,
+		readerStdin: rStdin,
+
 		outChannel:   make(chan string),
 		errorChannel: make(chan string),
 	}
+
+	os.Stdin = c.readerStdin
+
+	_, err = wStdin.WriteString(stdinString)
+	if err != nil {
+		wStdin.Close()
+		os.Stdin = c.backupStdin
+		return nil, err
+	}
+
 	os.Stdout = c.writerStdout
 	os.Stderr = c.writerStderr
 
@@ -114,11 +132,16 @@ func (c *container) Stop() {
 		_ = c.writerStderr.Close()
 	}
 
+	if c.readerStdin != nil {
+		_ = c.readerStdin.Close()
+	}
+
 	// Give it a sec to finish collecting data from buffers?
 	time.Sleep(10 * time.Millisecond)
 
 	os.Stdout = c.backupStdout
 	os.Stderr = c.backupStderr
+	os.Stdin = c.backupStdin
 
 	// Separate captured stdout by delimeters
 	c.OutData = strings.FieldsFunc(c.outData,
