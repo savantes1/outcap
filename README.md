@@ -15,14 +15,20 @@ import (
 )
 
 func main() {
-    oc := outcap.NewContainer('\n')
+    oc, err := outcap.NewContainer('\n')
+
+    if err == nil {
     
-    fmt.Println("test")
-    fmt.Println("test2")
-    fmt.Fprintln(os.Stderr, "stderr error")
-    
-    oc.Stop()
-    fmt.Println(oc.Data)
-    // [test, test2, stderr error]
+        fmt.Println("test")
+        fmt.Println("test2")
+        fmt.Fprintln(os.Stderr, "stderr error")
+        
+        oc.Stop()
+        fmt.Println(oc.Data)
+        // [test, test2, stderr error]
+    } else {
+
+        fmt.Fprintln(os.Stderr, err)
+    }
 }
 ```
