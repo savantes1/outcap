@@ -20,9 +20,19 @@ type container struct {
 	Data []string
 }
 
-func Start() *container {
-	rStdout, wStdout, _ := os.Pipe()
-	rStderr, wStderr, _ := os.Pipe()
+func Start() (*container, error) {
+	rStdout, wStdout, err := os.Pipe()
+
+	if err != nil {
+		return nil, err
+	}
+
+	rStderr, wStderr, err := os.Pipe()
+
+	if err != nil {
+		return nil, err
+	}
+
 	c := &container{
 		backupStdout: os.Stdout,
 		writerStdout: wStdout,
@@ -58,10 +68,11 @@ func Start() *container {
 		}
 	}(c)
 
-	return c
+	return c, nil
 }
 
 func Stop(c *container) {
+
 	_ = c.writerStdout.Close()
 	_ = c.writerStderr.Close()
 	time.Sleep(10 * time.Millisecond)

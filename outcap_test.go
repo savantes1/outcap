@@ -7,7 +7,11 @@ import (
 )
 
 func TestStart(t *testing.T) {
-	c := Start()
+	c, err := Start()
+
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	fmt.Println("test")
 	fmt.Println("test2")
