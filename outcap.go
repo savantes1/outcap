@@ -2,12 +2,20 @@ package outcap
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"os"
 	"strings"
 	"time"
 )
 
+// container is used to keep track of redirected stdout and stderr
+// and hold output collected. Once the Stop() method is called,
+// stdout and stderr are restored and collected output is available
+// via the Data field.
+// IMPORTANT: container is not reusable for collecting output after
+// Stop() method is called. If you need to collect output after Stop()
+// create new container via NewContainer() function.
 type container struct {
 	backupStdout *os.File
 	writerStdout *os.File
@@ -20,7 +28,7 @@ type container struct {
 	Data []string
 }
 
-func Start() (*container, error) {
+func NewContainer() (*container, error) {
 	rStdout, wStdout, err := os.Pipe()
 
 	if err != nil {
@@ -47,13 +55,25 @@ func Start() (*container, error) {
 
 	go func(out chan string, readerStdout *os.File, readerStderr *os.File) {
 		var bufStdout bytes.Buffer
-		_, _ = io.Copy(&bufStdout, readerStdout)
+
+		// try to copy buffer from stdout to out channel
+		// if it fails, print message to the stderr (not great solution, but can't think of better one)
+		if _, err := io.Copy(&bufStdout, readerStdout); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+		}
+
 		if bufStdout.Len() > 0 {
 			out <- bufStdout.String()
 		}
 
 		var bufStderr bytes.Buffer
-		_, _ = io.Copy(&bufStderr, readerStderr)
+
+		// try to copy buffer from stderr to out channel
+		// ironically, if it fails, print message to stderr...
+		if _, err := io.Copy(&bufStderr, readerStderr); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+		}
+
 		if bufStderr.Len() > 0 {
 			out <- bufStderr.String()
 		}
@@ -71,10 +91,19 @@ func Start() (*container, error) {
 	return c, nil
 }
 
-func Stop(c *container) {
+// Stop() closes redirected stdout and stderr and restores them.
+// Also formats collected output data in container.
+func (c *container) Stop() {
 
-	_ = c.writerStdout.Close()
-	_ = c.writerStderr.Close()
+	if c.writerStdout != nil {
+		_ = c.writerStdout.Close()
+	}
+
+	if c.writerStderr != nil {
+		_ = c.writerStderr.Close()
+	}
+
+	// Give it a sec to finish collecting data from buffers?
 	time.Sleep(10 * time.Millisecond)
 
 	os.Stdout = c.backupStdout

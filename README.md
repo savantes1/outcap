@@ -15,13 +15,13 @@ import (
 )
 
 func main() {
-    oc := outcap.Start()
+    oc := outcap.NewContainer()
     
     fmt.Println("test")
     fmt.Println("test2")
     fmt.Fprintln(os.Stderr, "stderr error")
     
-    cage.Stop(oc)
+    oc.Stop()
     fmt.Println(oc.Data)
     // [test, test2, stderr error]
 }

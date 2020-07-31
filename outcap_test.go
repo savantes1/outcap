@@ -7,7 +7,7 @@ import (
 )
 
 func TestStart(t *testing.T) {
-	c, err := Start()
+	c, err := NewContainer()
 
 	if err != nil {
 		t.Fatal(err)
@@ -17,7 +17,7 @@ func TestStart(t *testing.T) {
 	fmt.Println("test2")
 	fmt.Fprintln(os.Stderr, "stderr error")
 
-	Stop(c)
+	c.Stop()
 
 	fmt.Println(c.Data)
 
