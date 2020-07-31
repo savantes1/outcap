@@ -15,7 +15,7 @@ import (
 )
 
 func main() {
-    oc := outcap.NewContainer()
+    oc := outcap.NewContainer('\n')
     
     fmt.Println("test")
     fmt.Println("test2")

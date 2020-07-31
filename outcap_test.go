@@ -7,7 +7,7 @@ import (
 )
 
 func TestStart(t *testing.T) {
-	c, err := NewContainer()
+	c, err := NewContainer('\n')
 
 	if err != nil {
 		t.Fatal(err)
@@ -22,7 +22,7 @@ func TestStart(t *testing.T) {
 	fmt.Println(c.Data)
 
 	if len(c.Data) != 3 {
-		t.Error("Data length should be 3")
+		t.Fatal("Data length should be 3")
 	}
 	if c.Data[0] != "test" {
 		t.Errorf("First line should be 'test', instead of %s", c.Data[0])

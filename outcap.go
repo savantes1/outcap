@@ -17,6 +17,8 @@ import (
 // Stop() method is called. If you need to collect output after Stop()
 // create new container via NewContainer() function.
 type container struct {
+	delimiters []rune
+
 	backupStdout *os.File
 	writerStdout *os.File
 	backupStderr *os.File
@@ -28,7 +30,8 @@ type container struct {
 	Data []string
 }
 
-func NewContainer() (*container, error) {
+func NewContainer(delims ...rune) (*container, error) {
+
 	rStdout, wStdout, err := os.Pipe()
 
 	if err != nil {
@@ -42,6 +45,8 @@ func NewContainer() (*container, error) {
 	}
 
 	c := &container{
+		delimiters: delims,
+
 		backupStdout: os.Stdout,
 		writerStdout: wStdout,
 
@@ -109,8 +114,25 @@ func (c *container) Stop() {
 	os.Stdout = c.backupStdout
 	os.Stderr = c.backupStderr
 
-	c.Data = strings.Split(c.data, "\n")
-	if c.Data[len(c.Data)-1] == "" {
-		c.Data = c.Data[:len(c.Data)-1]
-	}
+	// Separate captured output by delimeters
+	c.Data = strings.FieldsFunc(c.data,
+		func(r rune) bool {
+
+			for _, elem := range c.delimiters {
+				if r == elem {
+					return true
+				}
+			}
+
+			return false
+		},
+	)
+
+	// // Remove empty items
+	// for _, elem := range temp {
+	// 	if elem != "" {
+	// 		c.Data = append(c.Data, elem)
+	// 	}
+	// }
+
 }
