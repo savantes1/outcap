@@ -25,6 +25,7 @@ type container struct {
 	writerStderr *os.File
 	backupStdin  *os.File
 	readerStdin  *os.File
+	writerStdin  io.Writer
 
 	outData      string
 	errorData    string
@@ -35,7 +36,7 @@ type container struct {
 	ErrorData []string
 }
 
-func NewContainer(stdinString string, delims ...rune) (*container, error) {
+func NewContainer(delims ...rune) (*container, error) {
 
 	rStdout, wStdout, err := os.Pipe()
 	if err != nil {
@@ -63,20 +64,13 @@ func NewContainer(stdinString string, delims ...rune) (*container, error) {
 
 		backupStdin: os.Stdin,
 		readerStdin: rStdin,
+		writerStdin: wStdin,
 
 		outChannel:   make(chan string),
 		errorChannel: make(chan string),
 	}
 
 	os.Stdin = c.readerStdin
-
-	_, err = wStdin.WriteString(stdinString)
-	if err != nil {
-		wStdin.Close()
-		os.Stdin = c.backupStdin
-		return nil, err
-	}
-
 	os.Stdout = c.writerStdout
 	os.Stderr = c.writerStderr
 
@@ -119,6 +113,25 @@ func NewContainer(stdinString string, delims ...rune) (*container, error) {
 
 	return c, nil
 }
+
+// Write string to redirected stdin
+// IMPORTANT: There is a known limitation with redirecting stdin
+// when trying to feed string data to the fmt.Scanln/fmt.Scan functions
+// after already feeding data to bufio.Scanner.Scan.
+// In this scenario, the bufio.Scanner.Scan will read THE ENTIRE
+// string and leave nothing left for the fmt.Scan function, thereby
+// leaving it waiting indefinitely for input. :( 
+func (c *container) WriteToStdin(input string) error {
+
+	_, err := fmt.Fprint(c.writerStdin, input)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+
 
 // Stop() closes redirected stdout and stderr and restores them.
 // Also formats collected output data in container.
