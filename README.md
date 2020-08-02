@@ -15,7 +15,7 @@ import (
 )
 
 func main() {
-    oc, err := outcap.NewContainer("", '\n')
+    oc, err := outcap.NewContainer('\n')
 
     if err == nil {
     

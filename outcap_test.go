@@ -1,32 +1,70 @@
 package outcap
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"testing"
+	"time"
 )
 
 func TestInput(t *testing.T) {
 
-	c, err := NewContainer("42\n", '\n')
+	c, err := NewContainer('\n')
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	var testInt int
-	fmt.Println("Type an int")
-	fmt.Scanln(&testInt)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	
+	// should always use a goroutine when passing redirectd input
+	go func() {
 
-	fmt.Println("You Entered:", testInt)
+		var testInt int
+		fmt.Println("Type an int")
+		fmt.Scanln(&testInt)
 
-	c.Stop()
+		fmt.Println("The int you entered was:", testInt)
 
-	fmt.Println(c.OutData)
 
+		var testString string
+		fmt.Println("Type a single-word string")
+		fmt.Scanln(&testString)
+
+		fmt.Println("The single-word string you entered was:", testString)
+
+		cancel()
+	}()
+
+	c.WriteToStdin("42\n")
+	c.WriteToStdin("Coolness\n")
+
+	select {
+	case <-ctx.Done():
+		c.Stop()
+	}
+
+	if ctx.Err() == context.DeadlineExceeded {
+		t.Fatal("Timed Out")
+	} else {
+
+		if len(c.OutData) != 4 {
+			t.Fatal("Unexpected number of outputs")
+		}
+
+		if c.OutData[1] != "The int you entered was: 42" {
+			t.Errorf("%q does not match \"The int you entered was: 42\"", c.OutData[1])
+		}
+
+		if c.OutData[3] != "The single-word string you entered was: Coolness" {
+			t.Errorf("%q does not match \"The single-word string you entered was: 42\"", c.OutData[3])
+		}
+
+	}
 }
 
 func TestOutput(t *testing.T) {
-	c, err := NewContainer("", '\n')
+	c, err := NewContainer('\n')
 
 	if err != nil {
 		t.Fatal(err)
