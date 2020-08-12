@@ -1,6 +1,6 @@
 # Standard Output Capture (outcap)
 
-Simple library to catch stdout/stderr in Go. Cloned from https://github.com/PumpkinSeed/cage
+Simple library to catch stdout/stderr in Go. Originally cloned from https://github.com/PumpkinSeed/cage
 
 #### Usage
 
